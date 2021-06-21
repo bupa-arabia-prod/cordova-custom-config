@@ -36,7 +36,7 @@ var fileUtils = (function(){
     // Parses the config.xml into an elementtree object and stores in the config object
     fileUtils.getConfigXml = function() {
         if(!configXmlData) {
-            configXmlData = fileUtils.parseElementtreeSync(path.join(context.opts.projectRoot, 'config.xml'));
+            configXmlData = fileUtils.parseElementtreeSync(path.join(context.opts.projectRoot,"www", "bupaconfig", "config.xml"));
         }
         return configXmlData;
     };
