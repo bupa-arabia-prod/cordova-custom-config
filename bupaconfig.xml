@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<platform name="android">
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <queries>
+                <intent>
+                    <action android:name="android.support.customtabs.action.CustomTabsService" />
+                </intent>
+            </queries>
+        </config-file>
+    </platform>
