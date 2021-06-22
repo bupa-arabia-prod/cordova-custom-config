@@ -50,6 +50,16 @@ var applyCustomConfig = (function(){
             parent: "./",
             uniqueBy: "name"
         },
+         {
+            tag: "queries",
+            parent: "./",
+            uniqueBy: "name"
+        },
+        {
+            tag: "intent",
+            parent: "./queries",
+            uniqueBy: "name"
+        },
         {
             tag: "permission",
             parent: "./",
