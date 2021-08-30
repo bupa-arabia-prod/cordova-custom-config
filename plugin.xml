@@ -23,9 +23,7 @@
 </queries>
   
 </config-file>
- <config-file mode="merge" target="AndroidManifest.xml" parent="/manifest">
-    <application android:debuggable="false" />
-</config-file>
+ 
     
 </platform>
     <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
