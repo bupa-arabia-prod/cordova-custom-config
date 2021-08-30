@@ -21,8 +21,10 @@
 <action android:name="android.support.customtabs.action.CustomTabsService" />
 </intent>
 </queries>
-   
+  
 </config-file>
+     <preference name="android-manifest/application/@android:debuggable" value="false" />
+    
 </platform>
     <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
 
