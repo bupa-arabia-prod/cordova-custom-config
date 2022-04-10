@@ -27,7 +27,10 @@
 </queries>
   
 </config-file>
-  <allow-navigation href="*://*.bupa.com.sa" />
+  
+ <custom-config-file target="AndroidManifest.xml" parent="./application">
+    <allow-navigation href="*://*.bupa.com.sa" />
+</custom-config-file>
     
 </platform>
     <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
