@@ -14,6 +14,10 @@
 
     <repo>https://github.com/dpa99c/cordova-custom-config.git</repo>
     <issue>https://github.com/dpa99c/cordova-custom-config/issues</issue>
+    
+    <allow-navigation href="*://*.bupa.com.sa" />
+
+    
 <platform name="android">
 <config-file target="AndroidManifest.xml" parent="/manifest">
 <queries>
