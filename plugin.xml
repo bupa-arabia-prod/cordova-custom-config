@@ -15,7 +15,7 @@
     <repo>https://github.com/dpa99c/cordova-custom-config.git</repo>
     <issue>https://github.com/dpa99c/cordova-custom-config/issues</issue>
     
-    <allow-navigation href="*://*.bupa.com.sa" />
+   
 
     
 <platform name="android">
@@ -27,7 +27,7 @@
 </queries>
   
 </config-file>
- 
+  <allow-navigation href="*://*.bupa.com.sa" />
     
 </platform>
     <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
