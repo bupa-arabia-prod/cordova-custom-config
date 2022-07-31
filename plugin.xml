@@ -25,9 +25,11 @@
 <action android:name="android.support.customtabs.action.CustomTabsService" />
 </intent>
 </queries>
-  <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
-</config-file>
   
+</config-file>
+  <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
+   </config-file>
  <custom-config-file target="AndroidManifest.xml" parent="./application">
     <allow-navigation href="*://*.bupa.com.sa" />
 </custom-config-file>
