@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+  
     id="cordova-custom-config"
     version="5.1.0">
 
@@ -28,13 +28,11 @@
 </queries>
   
 </config-file>
-  <config-file target="AndroidManifest.xml" parent="/manifest">
-      <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
-   </config-file>
+  
  <custom-config-file target="AndroidManifest.xml" parent="./application">
     <allow-navigation href="*://*.bupa.com.sa" />
 </custom-config-file>
-     <framework src="com.google.android.gms:play-services-ads-identifier:20.4.0" />
+    
 </platform>
     <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
 
