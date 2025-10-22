@@ -34,6 +34,14 @@
 </custom-config-file>
     
 </platform>
+    <platform name="ios">
+    <custom-config-file platform="ios" target="*-Info.plist" parent="NSAppTransportSecurity">
+        <dict>
+            <key>NSAllowsArbitraryLoads</key>
+            <false/>
+        </dict>
+    </custom-config-file>
+    </platform>
     <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
 
     <license>MIT</license>
