@@ -41,6 +41,17 @@
             <false/>
         </dict>
     </custom-config-file>
+    <config-file target="*-Info.plist" parent="CFBundleLocalizations">
+        <array>
+            <string>en</string>
+            <string>ar</string>
+        </array>
+    </config-file>
+
+    <!-- Localisation files mapping for OutSystems MABS -->
+    <resource-file src="Localisation/en.lproj/InfoPlist.strings" target="Resources/en.lproj/InfoPlist.strings" />
+    <resource-file src="Localisation/ar.lproj/InfoPlist.strings" target="Resources/ar.lproj/InfoPlist.strings" />
+    
     </platform>
     <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
 
