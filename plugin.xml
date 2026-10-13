@@ -52,6 +52,8 @@
     <resource-file src="Localisation/en.lproj/InfoPlist.strings" target="Resources/en.lproj/InfoPlist.strings" />
     <resource-file src="Localisation/ar.lproj/InfoPlist.strings" target="Resources/ar.lproj/InfoPlist.strings" />
     
+    <hook type="after_prepare" src="scripts/fixLocalizations.js" />
+    
     </platform>
     <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
 
