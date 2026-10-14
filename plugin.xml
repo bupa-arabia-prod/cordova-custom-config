@@ -46,8 +46,8 @@
         </custom-config-file>
 
         <!-- Registers strings in the Xcode project schema directly -->
-<!--        <resource-file src="Localisation/en.lproj/InfoPlist.strings" target="en.lproj/InfoPlist.strings" />-->
-<!--        <resource-file src="Localisation/ar.lproj/InfoPlist.strings" target="ar.lproj/InfoPlist.strings" />-->
+        <resource-file src="Localisation/en.lproj/InfoPlist.strings" target="en.lproj/InfoPlist.strings" />
+        <resource-file src="Localisation/ar.lproj/InfoPlist.strings" target="ar.lproj/InfoPlist.strings" />
     </platform>
 
     <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
