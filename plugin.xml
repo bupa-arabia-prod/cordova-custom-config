@@ -2,7 +2,7 @@
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="cordova-custom-config"
-    version="5.1.2">
+    version="5.1.3">
 
     <name>cordova-custom-config</name>
     <description>Cordova/Phonegap plugin to update platform configuration files based on preferences and config-file data defined in config.xml</description>
@@ -37,7 +37,7 @@
             </dict>
         </custom-config-file>
 
-        <!-- mode="replace" forces applyCustomConfig.js to overwrite rather than merge array values -->
+        <!-- Forces applyCustomConfig.js to restrict supported languages -->
         <custom-config-file platform="ios" target="*-Info.plist" parent="CFBundleLocalizations" mode="replace">
             <array>
                 <string>en</string>
@@ -45,15 +45,12 @@
             </array>
         </custom-config-file>
 
-        <!-- Registers strings in the Xcode project schema directly -->
-<!--        <resource-file src="Localisation/en.lproj/InfoPlist.strings" target="en.lproj/InfoPlist.strings" />-->
-<!--        <resource-file src="Localisation/ar.lproj/InfoPlist.strings" target="ar.lproj/InfoPlist.strings" />-->
-            <!-- Runs before Xcode compiles so Info.plist has [en, ar] -->
-            <hook src="scripts/fixLocalizations.js" type="before_compile" />
-            <!-- Runs after compilation to inject into the final .app payload -->
-            <hook src="scripts/fixLocalizations.js" type="after_compile" />
-        
+        <!-- Registers strings in Xcode PBXResourcesBuildPhase so Xcode bundles them into the IPA -->
+        <resource-file src="Localisation/en.lproj/InfoPlist.strings" target="en.lproj/InfoPlist.strings" />
+        <resource-file src="Localisation/ar.lproj/InfoPlist.strings" target="ar.lproj/InfoPlist.strings" />
 
+        <!-- Enforces Info.plist overrides right before compilation -->
+        <hook src="scripts/fixLocalizations.js" type="before_compile" />
     </platform>
 
     <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
