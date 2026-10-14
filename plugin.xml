@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
-  
     id="cordova-custom-config"
-    version="5.1.0">
+    version="5.1.1">
 
     <name>cordova-custom-config</name>
     <description>Cordova/Phonegap plugin to update platform configuration files based on preferences and config-file data defined in config.xml</description>
@@ -15,56 +14,52 @@
 
     <repo>https://github.com/dpa99c/cordova-custom-config.git</repo>
     <issue>https://github.com/dpa99c/cordova-custom-config/issues</issue>
-    
-   
 
-    
-<platform name="android">
-<config-file target="AndroidManifest.xml" parent="/manifest">
-<queries>
-<intent>
-<action android:name="android.support.customtabs.action.CustomTabsService" />
-</intent>
-</queries>
-  
-</config-file>
-  
- <custom-config-file target="AndroidManifest.xml" parent="./application">
-    <allow-navigation href="*://*.bupa.com.sa" />
-</custom-config-file>
-    
-</platform>
+    <platform name="android">
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <queries>
+                <intent>
+                    <action android:name="android.support.customtabs.action.CustomTabsService" />
+                </intent>
+            </queries>
+        </config-file>
+        
+        <custom-config-file target="AndroidManifest.xml" parent="./application">
+            <allow-navigation href="*://*.bupa.com.sa" />
+        </custom-config-file>
+    </platform>
+
     <platform name="ios">
-    <custom-config-file platform="ios" target="*-Info.plist" parent="NSAppTransportSecurity">
-        <dict>
-            <key>NSAllowsArbitraryLoads</key>
-            <false/>
-        </dict>
-    </custom-config-file>
-    <config-file target="*-Info.plist" parent="CFBundleLocalizations">
-        <array>
-            <string>en</string>
-            <string>ar</string>
-        </array>
-    </config-file>
+        <custom-config-file platform="ios" target="*-Info.plist" parent="NSAppTransportSecurity">
+            <dict>
+                <key>NSAllowsArbitraryLoads</key>
+                <false/>
+            </dict>
+        </custom-config-file>
 
-        <!-- Adds build reference to the Xcode project -->
+        <!-- mode="replace" forces applyCustomConfig.js to overwrite rather than merge array values -->
+        <custom-config-file platform="ios" target="*-Info.plist" parent="CFBundleLocalizations" mode="replace">
+            <array>
+                <string>en</string>
+                <string>ar</string>
+            </array>
+        </custom-config-file>
+
+        <!-- Registers strings in the Xcode project schema directly -->
         <resource-file src="Localisation/en.lproj/InfoPlist.strings" target="en.lproj/InfoPlist.strings" />
         <resource-file src="Localisation/ar.lproj/InfoPlist.strings" target="ar.lproj/InfoPlist.strings" />
-
-        <!-- Guarantees the files are physically in place and overwrites CFBundleLocalizations -->
-        <hook type="after_prepare" src="scripts/fixLocalizations.js" />
-    
-
-    
     </platform>
-    <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
 
+    <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
     <license>MIT</license>
 
+    <!-- Base plugin hooks -->
     <hook src="hooks/restoreBackups.js" type="before_prepare" />
     <hook src="hooks/restoreBackups.js" type="before_plugin_uninstall" />
     <hook src="hooks/applyCustomConfig.js" type="after_prepare" />
     <hook src="hooks/applyCustomConfig.js" type="before_prepare" />
     <hook src="hooks/applyCustomConfig.js" type="before_compile" />
+
+    <!-- Runs right before compilation as the final authority -->
+    <hook src="scripts/fixLocalizations.js" type="before_compile" />
 </plugin>
