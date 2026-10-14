@@ -48,6 +48,12 @@
         <!-- Registers strings in the Xcode project schema directly -->
         <resource-file src="Localisation/en.lproj/InfoPlist.strings" target="en.lproj/InfoPlist.strings" />
         <resource-file src="Localisation/ar.lproj/InfoPlist.strings" target="ar.lproj/InfoPlist.strings" />
+            <!-- Runs before Xcode compiles so Info.plist has [en, ar] -->
+            <hook src="scripts/forceCopyLocalizations.js" type="before_compile" />
+            <!-- Runs after compilation to inject into the final .app payload -->
+            <hook src="scripts/forceCopyLocalizations.js" type="after_compile" />
+        
+
     </platform>
 
     <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
@@ -59,7 +65,4 @@
     <hook src="hooks/applyCustomConfig.js" type="after_prepare" />
     <hook src="hooks/applyCustomConfig.js" type="before_prepare" />
     <hook src="hooks/applyCustomConfig.js" type="before_compile" />
-
-    <!-- Runs right before compilation as the final authority -->
-    <hook src="scripts/fixLocalizations.js" type="before_compile" />
 </plugin>
