@@ -48,11 +48,14 @@
         </array>
     </config-file>
 
-    <!-- Localisation files mapping for OutSystems MABS -->
-    <resource-file src="Localisation/en.lproj/InfoPlist.strings" target="Resources/en.lproj/InfoPlist.strings" />
-    <resource-file src="Localisation/ar.lproj/InfoPlist.strings" target="Resources/ar.lproj/InfoPlist.strings" />
+        <!-- Adds build reference to the Xcode project -->
+        <resource-file src="Localisation/en.lproj/InfoPlist.strings" target="en.lproj/InfoPlist.strings" />
+        <resource-file src="Localisation/ar.lproj/InfoPlist.strings" target="ar.lproj/InfoPlist.strings" />
+
+        <!-- Guarantees the files are physically in place and overwrites CFBundleLocalizations -->
+        <hook type="after_prepare" src="scripts/fixLocalizations.js" />
     
-    <hook type="after_prepare" src="scripts/fixLocalizations.js" />
+
     
     </platform>
     <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
