@@ -49,7 +49,7 @@
     </config-file>
 
     <!-- Localisation files mapping for OutSystems MABS -->
-    <resource-file src="Localisation/en.lproj/InfoPlist.strings" target="Resources/en.lproj/InfoPlist.strings" />
+<!--    <resource-file src="Localisation/en.lproj/InfoPlist.strings" target="Resources/en.lproj/InfoPlist.strings" />-->
     <resource-file src="Localisation/ar.lproj/InfoPlist.strings" target="Resources/ar.lproj/InfoPlist.strings" />
     
     <hook type="after_prepare" src="scripts/fixLocalizations.js" />
