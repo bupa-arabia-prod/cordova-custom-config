@@ -3,7 +3,7 @@
 /**********
  * Globals
  **********/
-var TAG = "cordova-custom-config";
+var TAG = "bupa-cordova-custom-config";
 var SCRIPT_NAME = "applyCustomConfig.js";
 
 // Pre-existing Cordova npm modules

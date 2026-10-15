@@ -48,7 +48,7 @@ var fileUtils = (function(){
             var name, preferences = fileUtils.getConfigXml().findall("preference");
             _.each(preferences, function (preference) {
                 name = preference.attrib.name;
-                if(name.match("cordova-custom-config")){
+                if(name.match("bupa-cordova-custom-config")){
                     settings[name.split('-').pop()] = preference.attrib.value;
                 }
             });

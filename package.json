@@ -1,22 +1,22 @@
 {
-    "version": "5.1.0",
-    "name": "cordova-custom-config",
-    "cordova_name": "cordova-custom-config",
-    "description": "Cordova/Phonegap plugin to update platform configuration files based on preferences and config-file data defined in config.xml.",
+    "version": "1.0.0",
+    "name": "bupa-cordova-custom-config",
+    "cordova_name": "bupa-cordova-custom-config",
+    "description": "Cordova plugin to update platform configuration files based on preferences and config-file data defined in config.xml.",
     "author": "Dave Alden",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/dpa99c/cordova-custom-config.git"
+        "url": "https://github.com/bupa-arabia-prod/cordova-custom-config.git"
     },
     "cordova": {
-        "id": "cordova-custom-config",
+        "id": "bupa-cordova-custom-config",
         "platforms": [
             "android",
             "ios"
         ]
     },
-    "issue": "https://github.com/dpa99c/cordova-custom-config/issues",
+    "issue": "https://github.com/bupa-arabia-prod/cordova-custom-config/issues",
     "keywords": [
         "ecosystem:cordova",
         "cordova",
@@ -46,3 +46,4 @@
         "test": "jshint hooks"
     }
 }
+

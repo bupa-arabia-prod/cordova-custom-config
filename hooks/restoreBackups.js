@@ -3,7 +3,7 @@
 /**********
  * Globals
  **********/
-var TAG = "cordova-custom-config";
+var TAG = "bupa-cordova-custom-config";
 var SCRIPT_NAME = "restoreBackups.js";
 
 // Pre-existing Cordova npm modules
@@ -130,7 +130,7 @@ module.exports = function(ctx) {
 
         restoreBackups.loadDependencies(ctx);
     }catch(e){
-        e.message = TAG + ": Error loading dependencies for "+SCRIPT_NAME+" - ensure the plugin has been installed via cordova-fetch or run 'npm install cordova-custom-config': "+e.message;
+        e.message = TAG + ": Error loading dependencies for "+SCRIPT_NAME+" - ensure the plugin has been installed via cordova-fetch or run 'npm install bupa-cordova-custom-config': "+e.message;
         if(typeof deferral !== "undefined"){
             deferral.reject(e.message);
             return deferral.promise;
