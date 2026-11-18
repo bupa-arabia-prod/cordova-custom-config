@@ -7,13 +7,13 @@
 
 - (void)pluginInitialize {
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(handleUserActivity:)
-                                                 name:@"UIApplicationContinueUserActivityNotification"
+                                             selector:@selector(handleContinueUserActivity:)
+                                                 name:CDVPluginContinueUserActivityNotification
                                                object:nil];
 }
 
-- (void)handleUserActivity:(NSNotification *)notification {
-    NSUserActivity *userActivity = notification.userInfo[@"UIApplicationLaunchOptionsUserActivityKey"] ?: notification.object;
+- (void)handleContinueUserActivity:(NSNotification *)notification {
+    NSUserActivity *userActivity = notification.object;
     if ([userActivity isKindOfClass:[NSUserActivity class]] &&
         [userActivity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb] &&
         userActivity.webpageURL != nil) {
