@@ -2,8 +2,6 @@
 #import <objc/runtime.h>
 #import <os/log.h>
 
-
-
 @interface UniversalLinkBridge : CDVPlugin
 - (void)dispatchUserActivityToJS:(NSUserActivity *)userActivity;
 @end
@@ -49,12 +47,16 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
                                                           object:nil
                                                            queue:[NSOperationQueue mainQueue]
                                                       usingBlock:^(NSNotification *note) {
-            UISceneConnectionOptions *options = note.userInfo[UISceneConnectionOptionsKey];
-            for (NSUserActivity *activity in options.userActivities) {
-                if ([activity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb] && activity.webpageURL != nil) {
-                    os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Scene cold-start URL: %{public}@", activity.webpageURL.absoluteString);
-                    sPendingUserActivity = activity;
-                    break;
+            for (id val in note.userInfo.allValues) {
+                if ([val isKindOfClass:[UISceneConnectionOptions class]]) {
+                    UISceneConnectionOptions *options = (UISceneConnectionOptions *)val;
+                    for (NSUserActivity *activity in options.userActivities) {
+                        if ([activity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb] && activity.webpageURL != nil) {
+                            os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Scene cold-start URL: %{public}@", activity.webpageURL.absoluteString);
+                            sPendingUserActivity = activity;
+                            break;
+                        }
+                    }
                 }
             }
         }];
@@ -68,13 +70,20 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
         // Check cold-start launchOptions dictionary
         NSDictionary *launchOptions = note.userInfo;
         NSDictionary *activityDict = launchOptions[UIApplicationLaunchOptionsUserActivityDictionaryKey];
-        NSUserActivity *launchActivity = activityDict[UIApplicationLaunchOptionsUserActivityKey];
-        if ([launchActivity isKindOfClass:[NSUserActivity class]] && launchActivity.webpageURL != nil) {
-            os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] AppDelegate cold-start URL: %{public}@", launchActivity.webpageURL.absoluteString);
-            if (sBridgeInitialized && sActiveBridge != nil) {
-                [sActiveBridge dispatchUserActivityToJS:launchActivity];
-            } else {
-                sPendingUserActivity = launchActivity;
+        if ([activityDict isKindOfClass:[NSDictionary class]]) {
+            for (id val in activityDict.allValues) {
+                if ([val isKindOfClass:[NSUserActivity class]]) {
+                    NSUserActivity *launchActivity = (NSUserActivity *)val;
+                    if ([launchActivity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb] && launchActivity.webpageURL != nil) {
+                        os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] AppDelegate cold-start URL: %{public}@", launchActivity.webpageURL.absoluteString);
+                        if (sBridgeInitialized && sActiveBridge != nil) {
+                            [sActiveBridge dispatchUserActivityToJS:launchActivity];
+                        } else {
+                            sPendingUserActivity = launchActivity;
+                        }
+                        break;
+                    }
+                }
             }
         }
 
