@@ -107,6 +107,14 @@
                 <string>applinks:bupadebug.go.link</string>
             </array>
         </config-file>
+        <!-- 5. Universal Link Bridge to forward HTTPS links to window.handleOpenURL -->
+                <config-file target="config.xml" parent="/*">
+                    <feature name="UniversalLinkBridge">
+                        <param name="ios-package" value="UniversalLinkBridge" />
+                        <param name="onload" value="true" />
+                    </feature>
+                </config-file>
+                <source-file src="src/ios/UniversalLinkBridge.m" />
     </platform>
 
     <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
