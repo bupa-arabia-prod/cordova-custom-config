@@ -1,7 +1,9 @@
-#import <UIKit/UIKit.h>
+@import Foundation;
+@import UIKit;
+@import ObjectiveC;
+@import os.log;
+
 #import <Cordova/CDVPlugin.h>
-#import <objc/runtime.h>
-#import <os/log.h>
 
 @protocol BupaSceneConnectionOptionsProtocol <NSObject>
 @property (nonatomic, readonly, copy) NSSet<NSUserActivity *> *userActivities;
@@ -11,6 +13,7 @@
 - (void)dispatchUserActivityToJS:(NSUserActivity *)userActivity;
 @end
 
+static NSString *const kCDVContinueUserActivityNotification = @"CDVPluginContinueUserActivityNotification";
 static NSUserActivity *sPendingUserActivity = nil;
 static BOOL sBridgeInitialized = NO;
 static __weak UniversalLinkBridge *sActiveBridge = nil;
@@ -33,8 +36,8 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
 @implementation UniversalLinkBridge
 
 + (void)load {
-    // 1. CordovaLib SceneDelegate Notification
-    [[NSNotificationCenter defaultCenter] addObserverForName:CDVPluginContinueUserActivityNotification
+    // 1. CordovaLib SceneDelegate Notification (using string literal so OutSystems CordovaLib fork never fails symbol lookup)
+    [[NSNotificationCenter defaultCenter] addObserverForName:kCDVContinueUserActivityNotification
                                                       object:nil
                                                        queue:[NSOperationQueue mainQueue]
                                                   usingBlock:^(NSNotification *note) {
@@ -47,7 +50,7 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
         }
     }];
 
-    // 2. UIScene Cold-Start Connection Options (ARC-safe via protocol cast)
+    // 2. UIScene Cold-Start Connection Options
     Class sceneOptionsClass = NSClassFromString(@"UISceneConnectionOptions");
     if (sceneOptionsClass != nil) {
         [[NSNotificationCenter defaultCenter] addObserverForName:@"UISceneWillConnectNotification"
@@ -114,7 +117,7 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
 
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(handleContinueUserActivity:)
-                                                 name:CDVPluginContinueUserActivityNotification
+                                                 name:kCDVContinueUserActivityNotification
                                                object:nil];
 
     if (sPendingUserActivity != nil) {
