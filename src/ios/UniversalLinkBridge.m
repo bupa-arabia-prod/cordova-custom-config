@@ -1,3 +1,4 @@
+#import <UIKit/UIKit.h>
 #import <Cordova/CDVPlugin.h>
 #import <objc/runtime.h>
 #import <os/log.h>
@@ -8,12 +9,13 @@
 
 static NSUserActivity *sPendingUserActivity = nil;
 static BOOL sBridgeInitialized = NO;
-static UniversalLinkBridge *sActiveBridge = nil;
+static __weak UniversalLinkBridge *sActiveBridge = nil;
 
-// C-function hook for AppDelegate's application:continueUserActivity:restorationHandler:
 static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *application, NSUserActivity *userActivity, void (^restorationHandler)(NSArray *)) {
-    os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] AppDelegate continueUserActivity fired: %{public}@", userActivity.webpageURL.absoluteString);
-    if ([userActivity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb] && userActivity.webpageURL != nil) {
+    if ([userActivity isKindOfClass:[NSUserActivity class]] &&
+        [userActivity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb] &&
+        userActivity.webpageURL != nil) {
+        os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] AppDelegate continueUserActivity fired: %{public}@", userActivity.webpageURL.absoluteString);
         if (sBridgeInitialized && sActiveBridge != nil) {
             [sActiveBridge dispatchUserActivityToJS:userActivity];
         } else {
@@ -27,7 +29,7 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
 @implementation UniversalLinkBridge
 
 + (void)load {
-    // 1. Hook SceneDelegate notification (for local Xcode / UIScene-based builds)
+    // 1. CordovaLib SceneDelegate Notification
     [[NSNotificationCenter defaultCenter] addObserverForName:CDVPluginContinueUserActivityNotification
                                                       object:nil
                                                        queue:[NSOperationQueue mainQueue]
@@ -41,17 +43,20 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
         }
     }];
 
-    // 2. Hook UIScene cold-start connection options
-    if (@available(iOS 13.0, *)) {
-        [[NSNotificationCenter defaultCenter] addObserverForName:UISceneWillConnectNotification
+    // 2. UIScene Cold-Start Connection Options (via runtime lookup to avoid SDK header errors)
+    Class sceneOptionsClass = NSClassFromString(@"UISceneConnectionOptions");
+    if (sceneOptionsClass != nil) {
+        [[NSNotificationCenter defaultCenter] addObserverForName:@"UISceneWillConnectNotification"
                                                           object:nil
                                                            queue:[NSOperationQueue mainQueue]
                                                       usingBlock:^(NSNotification *note) {
             for (id val in note.userInfo.allValues) {
-                if ([val isKindOfClass:[UISceneConnectionOptions class]]) {
-                    UISceneConnectionOptions *options = (UISceneConnectionOptions *)val;
-                    for (NSUserActivity *activity in options.userActivities) {
-                        if ([activity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb] && activity.webpageURL != nil) {
+                if ([val isKindOfClass:sceneOptionsClass] && [val respondsToSelector:@selector(userActivities)]) {
+                    NSSet *activities = [val performSelector:@selector(userActivities)];
+                    for (NSUserActivity *activity in activities) {
+                        if ([activity isKindOfClass:[NSUserActivity class]] &&
+                            [activity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb] &&
+                            activity.webpageURL != nil) {
                             os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Scene cold-start URL: %{public}@", activity.webpageURL.absoluteString);
                             sPendingUserActivity = activity;
                             break;
@@ -62,12 +67,11 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
         }];
     }
 
-    // 3. Hook AppDelegate directly (for OutSystems MABS builds without SceneDelegate)
+    // 3. AppDelegate Cold-Start & Runtime Hook (for MABS builds using AppDelegate)
     [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationDidFinishLaunchingNotification
                                                       object:nil
                                                        queue:[NSOperationQueue mainQueue]
                                                   usingBlock:^(NSNotification *note) {
-        // Check cold-start launchOptions dictionary
         NSDictionary *launchOptions = note.userInfo;
         NSDictionary *activityDict = launchOptions[UIApplicationLaunchOptionsUserActivityDictionaryKey];
         if ([activityDict isKindOfClass:[NSDictionary class]]) {
@@ -87,7 +91,6 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
             }
         }
 
-        // Inject application:continueUserActivity:restorationHandler: onto AppDelegate if missing
         id<UIApplicationDelegate> delegate = [UIApplication sharedApplication].delegate;
         if (delegate != nil) {
             Class delegateClass = [delegate class];

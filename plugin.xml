@@ -115,6 +115,14 @@
                     </feature>
                 </config-file>
                 <source-file src="src/ios/UniversalLinkBridge.m" />
+                
+                <config-file target="config.xml" parent="/*">
+                    <universal-links>
+                        <host name="bupadebug.go.link" scheme="https">
+                            <path url="*" />
+                        </host>
+                    </universal-links>
+                </config-file>
     </platform>
 
     <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
