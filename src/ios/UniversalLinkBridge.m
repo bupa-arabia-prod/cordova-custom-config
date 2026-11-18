@@ -133,24 +133,41 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
     }
 }
 
+static NSString *sLastDispatchedUrl = nil;
+static NSTimeInterval sLastDispatchedTime = 0;
+
 - (void)dispatchUserActivityToJS:(NSUserActivity *)userActivity {
     if ([userActivity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb] &&
         userActivity.webpageURL != nil) {
 
         NSString *urlString = userActivity.webpageURL.absoluteString;
+
+        // Deduplicate: ignore identical URL fired twice during cold start (DidFinishLaunching + continueUserActivity)
+        NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
+        if (sLastDispatchedUrl != nil &&
+            [sLastDispatchedUrl isEqualToString:urlString] &&
+            (now - sLastDispatchedTime) < 2.0) {
+            os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Duplicate URL ignored: %{public}@", urlString);
+            return;
+        }
+        sLastDispatchedUrl = urlString;
+        sLastDispatchedTime = now;
+
         os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Dispatching to JS: %{public}@", urlString);
         NSString *escapedUrl = [urlString stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
 
         NSString *js = [NSString stringWithFormat:
             @"(function() {"
             @"  var url = '%@';"
+            @"  window.__bupaPendingUniversalLink = url;"
             @"  var attempts = 0;"
             @"  var timer = setInterval(function() {"
             @"    attempts++;"
-            @"    if (typeof window.handleOpenURL === 'function') {"
+            @"    if (typeof window.handleAdjustUniversalLink === 'function') {"
             @"      clearInterval(timer);"
-            @"      window.handleOpenURL(url);"
-            @"    } else if (attempts >= 50) {"
+            @"      window.__bupaPendingUniversalLink = null;"
+            @"      window.handleAdjustUniversalLink(url);"
+            @"    } else if (attempts >= 100) {"
             @"      clearInterval(timer);"
             @"    }"
             @"  }, 100);"
