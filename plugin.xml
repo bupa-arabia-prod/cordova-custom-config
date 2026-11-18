@@ -97,28 +97,16 @@
         </config-file>
 
         <!-- 4. iOS Universal Links Entitlement -->
-        <config-file target="Entitlements-Debug.plist" parent="com.apple.developer.associated-domains">
+        <config-file target="*-Debug.plist" parent="com.apple.developer.associated-domains">
             <array>
                 <string>applinks:bupadebug.go.link</string>
             </array>
         </config-file>
-        <config-file target="Entitlements-Release.plist" parent="com.apple.developer.associated-domains">
+        <config-file target="*-Release.plist" parent="com.apple.developer.associated-domains">
             <array>
                 <string>applinks:bupadebug.go.link</string>
             </array>
         </config-file>
-        
-        
-<!--        <config-file target="*-Info.plist" parent="com.apple.developer.associated-domains">-->
-<!--            <array>-->
-<!--                <string>applinks:bupadebug.go.link</string>-->
-<!--            </array>-->
-<!--        </config-file>-->
-<!--        <config-file target="*-Release.plist" parent="com.apple.developer.associated-domains">-->
-<!--            <array>-->
-<!--                <string>applinks:bupadebug.go.link</string>-->
-<!--            </array>-->
-<!--        </config-file>-->
     </platform>
 
     <keywords>ecosystem:cordova,cordova,phonegap,ios,android,config,configuration,plist,manifest</keywords>
