@@ -3,6 +3,10 @@
 #import <objc/runtime.h>
 #import <os/log.h>
 
+@protocol BupaSceneConnectionOptionsProtocol <NSObject>
+@property (nonatomic, readonly, copy) NSSet<NSUserActivity *> *userActivities;
+@end
+
 @interface UniversalLinkBridge : CDVPlugin
 - (void)dispatchUserActivityToJS:(NSUserActivity *)userActivity;
 @end
@@ -43,7 +47,7 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
         }
     }];
 
-    // 2. UIScene Cold-Start Connection Options (via runtime lookup to avoid SDK header errors)
+    // 2. UIScene Cold-Start Connection Options (ARC-safe via protocol cast)
     Class sceneOptionsClass = NSClassFromString(@"UISceneConnectionOptions");
     if (sceneOptionsClass != nil) {
         [[NSNotificationCenter defaultCenter] addObserverForName:@"UISceneWillConnectNotification"
@@ -52,7 +56,7 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
                                                       usingBlock:^(NSNotification *note) {
             for (id val in note.userInfo.allValues) {
                 if ([val isKindOfClass:sceneOptionsClass] && [val respondsToSelector:@selector(userActivities)]) {
-                    NSSet *activities = [val performSelector:@selector(userActivities)];
+                    NSSet<NSUserActivity *> *activities = [(id<BupaSceneConnectionOptionsProtocol>)val userActivities];
                     for (NSUserActivity *activity in activities) {
                         if ([activity isKindOfClass:[NSUserActivity class]] &&
                             [activity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb] &&
