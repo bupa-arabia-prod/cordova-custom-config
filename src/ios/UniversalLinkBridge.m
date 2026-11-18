@@ -8,7 +8,7 @@
 - (void)pluginInitialize {
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(handleContinueUserActivity:)
-                                                 name:CDVPluginContinueUserActivityNotification
+                                                 name:@"CDVPluginContinueUserActivityNotification"
                                                object:nil];
 }
 
