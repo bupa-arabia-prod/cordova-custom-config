@@ -10,24 +10,48 @@
 @end
 
 @interface UniversalLinkBridge : CDVPlugin
-- (void)dispatchUserActivityToJS:(NSUserActivity *)userActivity;
+- (void)storeAndDispatchURL:(NSURL *)webpageURL;
+- (void)getPendingUniversalLink:(CDVInvokedUrlCommand *)command;
 @end
 
 static NSString *const kCDVContinueUserActivityNotification = @"CDVPluginContinueUserActivityNotification";
-static NSUserActivity *sPendingUserActivity = nil;
+static NSString *sPendingUrl = nil;
+static NSString *sLastHandledUrl = nil;
+static NSTimeInterval sLastHandledTime = 0;
 static BOOL sBridgeInitialized = NO;
 static __weak UniversalLinkBridge *sActiveBridge = nil;
+
+static void bupa_captureUrl(NSURL *webpageURL) {
+    if (webpageURL == nil) return;
+    NSString *urlString = webpageURL.absoluteString;
+    if (urlString.length == 0) return;
+
+    NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
+    if (sLastHandledUrl != nil &&
+        [sLastHandledUrl isEqualToString:urlString] &&
+        (now - sLastHandledTime) < 2.0) {
+        os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Duplicate URL ignored: %{public}@", urlString);
+        return;
+    }
+    sLastHandledUrl = urlString;
+    sLastHandledTime = now;
+
+    // Always store in native memory so OutSystems can pull it on OnApplicationReady
+    sPendingUrl = urlString;
+    os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Stored pending URL in native memory: %{public}@", urlString);
+
+    // Also push immediately if app is already warm and running
+    if (sBridgeInitialized && sActiveBridge != nil) {
+        [sActiveBridge storeAndDispatchURL:webpageURL];
+    }
+}
 
 static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *application, NSUserActivity *userActivity, void (^restorationHandler)(NSArray *)) {
     if ([userActivity isKindOfClass:[NSUserActivity class]] &&
         [userActivity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb] &&
         userActivity.webpageURL != nil) {
         os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] AppDelegate continueUserActivity fired: %{public}@", userActivity.webpageURL.absoluteString);
-        if (sBridgeInitialized && sActiveBridge != nil) {
-            [sActiveBridge dispatchUserActivityToJS:userActivity];
-        } else {
-            sPendingUserActivity = userActivity;
-        }
+        bupa_captureUrl(userActivity.webpageURL);
         return YES;
     }
     return NO;
@@ -36,16 +60,15 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
 @implementation UniversalLinkBridge
 
 + (void)load {
-    // 1. CordovaLib SceneDelegate Notification (using string literal so OutSystems CordovaLib fork never fails symbol lookup)
+    // 1. CordovaLib SceneDelegate Notification
     [[NSNotificationCenter defaultCenter] addObserverForName:kCDVContinueUserActivityNotification
                                                       object:nil
                                                        queue:[NSOperationQueue mainQueue]
                                                   usingBlock:^(NSNotification *note) {
         if ([note.object isKindOfClass:[NSUserActivity class]]) {
             NSUserActivity *act = (NSUserActivity *)note.object;
-            os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Scene notification fired: %{public}@", act.webpageURL.absoluteString);
-            if (!sBridgeInitialized) {
-                sPendingUserActivity = act;
+            if ([act.activityType isEqualToString:NSUserActivityTypeBrowsingWeb]) {
+                bupa_captureUrl(act.webpageURL);
             }
         }
     }];
@@ -64,8 +87,7 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
                         if ([activity isKindOfClass:[NSUserActivity class]] &&
                             [activity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb] &&
                             activity.webpageURL != nil) {
-                            os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Scene cold-start URL: %{public}@", activity.webpageURL.absoluteString);
-                            sPendingUserActivity = activity;
+                            bupa_captureUrl(activity.webpageURL);
                             break;
                         }
                     }
@@ -74,7 +96,7 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
         }];
     }
 
-    // 3. AppDelegate Cold-Start & Runtime Hook (for MABS builds using AppDelegate)
+    // 3. AppDelegate Cold-Start & Runtime Hook
     [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationDidFinishLaunchingNotification
                                                       object:nil
                                                        queue:[NSOperationQueue mainQueue]
@@ -87,11 +109,7 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
                     NSUserActivity *launchActivity = (NSUserActivity *)val;
                     if ([launchActivity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb] && launchActivity.webpageURL != nil) {
                         os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] AppDelegate cold-start URL: %{public}@", launchActivity.webpageURL.absoluteString);
-                        if (sBridgeInitialized && sActiveBridge != nil) {
-                            [sActiveBridge dispatchUserActivityToJS:launchActivity];
-                        } else {
-                            sPendingUserActivity = launchActivity;
-                        }
+                        bupa_captureUrl(launchActivity.webpageURL);
                         break;
                     }
                 }
@@ -119,63 +137,41 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
                                              selector:@selector(handleContinueUserActivity:)
                                                  name:kCDVContinueUserActivityNotification
                                                object:nil];
-
-    if (sPendingUserActivity != nil) {
-        NSUserActivity *activity = sPendingUserActivity;
-        sPendingUserActivity = nil;
-        [self dispatchUserActivityToJS:activity];
-    }
 }
 
 - (void)handleContinueUserActivity:(NSNotification *)notification {
     if ([notification.object isKindOfClass:[NSUserActivity class]]) {
-        [self dispatchUserActivityToJS:(NSUserActivity *)notification.object];
+        NSUserActivity *act = (NSUserActivity *)notification.object;
+        if ([act.activityType isEqualToString:NSUserActivityTypeBrowsingWeb]) {
+            bupa_captureUrl(act.webpageURL);
+        }
     }
 }
 
-static NSString *sLastDispatchedUrl = nil;
-static NSTimeInterval sLastDispatchedTime = 0;
+// Push to JS for warm starts when OutSystems is already loaded
+- (void)storeAndDispatchURL:(NSURL *)webpageURL {
+    if (webpageURL == nil) return;
+    NSString *urlString = webpageURL.absoluteString;
+    NSString *escapedUrl = [urlString stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
 
-- (void)dispatchUserActivityToJS:(NSUserActivity *)userActivity {
-    if ([userActivity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb] &&
-        userActivity.webpageURL != nil) {
+    NSString *js = [NSString stringWithFormat:
+        @"if (typeof window.handleAdjustUniversalLink === 'function') {"
+        @"  window.handleAdjustUniversalLink('%@');"
+        @"}",
+        escapedUrl];
 
-        NSString *urlString = userActivity.webpageURL.absoluteString;
+    [self.commandDelegate evalJs:js];
+}
 
-        // Deduplicate: ignore identical URL fired twice during cold start (DidFinishLaunching + continueUserActivity)
-        NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
-        if (sLastDispatchedUrl != nil &&
-            [sLastDispatchedUrl isEqualToString:urlString] &&
-            (now - sLastDispatchedTime) < 2.0) {
-            os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Duplicate URL ignored: %{public}@", urlString);
-            return;
-        }
-        sLastDispatchedUrl = urlString;
-        sLastDispatchedTime = now;
+// Pull from JS on cold start inside OutSystems OnApplicationReady
+- (void)getPendingUniversalLink:(CDVInvokedUrlCommand *)command {
+    NSString *urlToReturn = sPendingUrl;
+    sPendingUrl = nil; // Consume once so it doesn't re-trigger on refresh
+    os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] JS pulled pending URL: %{public}@", urlToReturn ?: @"(none)");
 
-        os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Dispatching to JS: %{public}@", urlString);
-        NSString *escapedUrl = [urlString stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
-
-        NSString *js = [NSString stringWithFormat:
-            @"(function() {"
-            @"  var url = '%@';"
-            @"  window.__bupaPendingUniversalLink = url;"
-            @"  var attempts = 0;"
-            @"  var timer = setInterval(function() {"
-            @"    attempts++;"
-            @"    if (typeof window.handleAdjustUniversalLink === 'function') {"
-            @"      clearInterval(timer);"
-            @"      window.__bupaPendingUniversalLink = null;"
-            @"      window.handleAdjustUniversalLink(url);"
-            @"    } else if (attempts >= 100) {"
-            @"      clearInterval(timer);"
-            @"    }"
-            @"  }, 100);"
-            @"})();",
-            escapedUrl];
-
-        [self.commandDelegate evalJs:js];
-    }
+    CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                                messageAsString:urlToReturn];
+    [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
 }
 
 - (void)dealloc {
