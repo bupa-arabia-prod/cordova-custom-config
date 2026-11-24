@@ -21,9 +21,31 @@ static NSTimeInterval sLastHandledTime = 0;
 static BOOL sBridgeInitialized = NO;
 static __weak UniversalLinkBridge *sActiveBridge = nil;
 
+// Helper function to parse Universal Link, convert to bupa:// scheme, and store/dispatch
 static void bupa_captureUrl(NSURL *webpageURL) {
     if (webpageURL == nil) return;
-    NSString *urlString = webpageURL.absoluteString;
+    
+    // Convert https://bupadebug.go.link/... into bupa://path?query format
+    NSURLComponents *components = [NSURLComponents componentsWithURL:webpageURL resolvingAgainstBaseURL:YES];
+    NSString *path = components.path;
+    if (path.length == 0) {
+        path = @"/";
+    }
+    
+    // Build query string if parameters exist
+    NSMutableString *customSchemeString = [NSMutableString stringWithFormat:@"bupa://%@", path];
+    NSArray<NSURLQueryItem *> *queryItems = components.queryItems;
+    if (queryItems != nil && queryItems.count > 0) {
+        NSMutableArray *paramPairs = [NSMutableArray array];
+        for (NSURLQueryItem *item in queryItems) {
+            NSString *name = item.name ?: @"";
+            NSString *value = item.value ?: @"";
+            [paramPairs addObject:[NSString stringWithFormat:@"%@=%@", name, value]];
+        }
+        [customSchemeString appendFormat:@"?@", [paramPairs componentsJoinedByString:@"&"]];
+    }
+    
+    NSString *urlString = customSchemeString;
     if (urlString.length == 0) return;
 
     NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
@@ -36,13 +58,13 @@ static void bupa_captureUrl(NSURL *webpageURL) {
     sLastHandledUrl = urlString;
     sLastHandledTime = now;
 
-    // Always store in native memory so OutSystems can pull it on OnApplicationReady
+    // Store in native memory so OutSystems can pull it on OnApplicationReady
     sPendingUrl = urlString;
-    os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Stored pending URL in native memory: %{public}@", urlString);
+    os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Converted and stored custom scheme URL: %{public}@", urlString);
 
-    // Also push immediately if app is already warm and running
+    // Push immediately if app is already warm and running
     if (sBridgeInitialized && sActiveBridge != nil) {
-        [sActiveBridge storeAndDispatchURL:webpageURL];
+        [sActiveBridge storeAndDispatchURL:[NSURL URLWithString:urlString]];
     }
 }
 
@@ -148,15 +170,15 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
     }
 }
 
-// Push to JS for warm starts when OutSystems is already loaded
+// Push formatted bupa:// URL to window.handleOpenURL so OutSystems handles it natively
 - (void)storeAndDispatchURL:(NSURL *)webpageURL {
     if (webpageURL == nil) return;
     NSString *urlString = webpageURL.absoluteString;
     NSString *escapedUrl = [urlString stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
 
     NSString *js = [NSString stringWithFormat:
-        @"if (typeof window.handleAdjustUniversalLink === 'function') {"
-        @"  window.handleAdjustUniversalLink('%@');"
+        @"if (typeof window.handleOpenURL === 'function') {"
+        @"  window.handleOpenURL('%@');"
         @"}",
         escapedUrl];
 
