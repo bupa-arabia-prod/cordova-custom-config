@@ -15,38 +15,15 @@
 @end
 
 static NSString *const kCDVContinueUserActivityNotification = @"CDVPluginContinueUserActivityNotification";
-static NSString *const kCDVHandleOpenURLNotification = @"CDVPluginHandleOpenURLNotification";
 static NSString *sPendingUrl = nil;
 static NSString *sLastHandledUrl = nil;
 static NSTimeInterval sLastHandledTime = 0;
 static BOOL sBridgeInitialized = NO;
 static __weak UniversalLinkBridge *sActiveBridge = nil;
 
-// Helper function to parse Universal Link, convert to bupa:// scheme, and store/dispatch
 static void bupa_captureUrl(NSURL *webpageURL) {
     if (webpageURL == nil) return;
-    
-    // Convert https://bupadebug.go.link/... into bupa://path?query format
-    NSURLComponents *components = [NSURLComponents componentsWithURL:webpageURL resolvingAgainstBaseURL:YES];
-    NSString *path = components.path;
-    if (path.length == 0) {
-        path = @"/";
-    }
-    
-    // Build query string if parameters exist
-    NSMutableString *customSchemeString = [NSMutableString stringWithFormat:@"bupa://%@", path];
-    NSArray<NSURLQueryItem *> *queryItems = components.queryItems;
-    if (queryItems != nil && queryItems.count > 0) {
-        NSMutableArray *paramPairs = [NSMutableArray array];
-        for (NSURLQueryItem *item in queryItems) {
-            NSString *name = item.name ?: @"";
-            NSString *value = item.value ?: @"";
-            [paramPairs addObject:[NSString stringWithFormat:@"%@=%@", name, value]];
-        }
-        [customSchemeString appendFormat:@"?%@", [paramPairs componentsJoinedByString:@"&"]];
-    }
-    
-    NSString *urlString = customSchemeString;
+    NSString *urlString = webpageURL.absoluteString;
     if (urlString.length == 0) return;
 
     NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
@@ -59,13 +36,13 @@ static void bupa_captureUrl(NSURL *webpageURL) {
     sLastHandledUrl = urlString;
     sLastHandledTime = now;
 
-    // Store in native memory so OutSystems can pull it on OnApplicationReady
+    // Always store in native memory so OutSystems can pull it on OnApplicationReady
     sPendingUrl = urlString;
-    os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Converted and stored custom scheme URL: %{public}@", urlString);
+    os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Stored pending URL in native memory: %{public}@", urlString);
 
-    // Push immediately if app is already warm and running
+    // Also push immediately if app is already warm and running
     if (sBridgeInitialized && sActiveBridge != nil) {
-        [sActiveBridge storeAndDispatchURL:[NSURL URLWithString:urlString]];
+        [sActiveBridge storeAndDispatchURL:webpageURL];
     }
 }
 
@@ -171,11 +148,19 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
     }
 }
 
-// Post CDVPluginHandleOpenURLNotification so Cordova's native CDVHandleOpenURL automatically processes it
+// Push to JS for warm starts when OutSystems is already loaded
 - (void)storeAndDispatchURL:(NSURL *)webpageURL {
     if (webpageURL == nil) return;
-    os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Posting CDVPluginHandleOpenURLNotification for URL: %{public}@", webpageURL.absoluteString);
-    [[NSNotificationCenter defaultCenter] postNotificationName:kCDVHandleOpenURLNotification object:webpageURL];
+    NSString *urlString = webpageURL.absoluteString;
+    NSString *escapedUrl = [urlString stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+
+    NSString *js = [NSString stringWithFormat:
+        @"if (typeof window.handleAdjustUniversalLink === 'function') {"
+        @"  window.handleAdjustUniversalLink('%@');"
+        @"}",
+        escapedUrl];
+
+    [self.commandDelegate evalJs:js];
 }
 
 // Pull from JS on cold start inside OutSystems OnApplicationReady
