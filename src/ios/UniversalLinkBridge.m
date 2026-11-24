@@ -15,6 +15,7 @@
 @end
 
 static NSString *const kCDVContinueUserActivityNotification = @"CDVPluginContinueUserActivityNotification";
+static NSString *const kCDVHandleOpenURLNotification = @"CDVPluginHandleOpenURLNotification";
 static NSString *sPendingUrl = nil;
 static NSString *sLastHandledUrl = nil;
 static NSTimeInterval sLastHandledTime = 0;
@@ -42,7 +43,7 @@ static void bupa_captureUrl(NSURL *webpageURL) {
             NSString *value = item.value ?: @"";
             [paramPairs addObject:[NSString stringWithFormat:@"%@=%@", name, value]];
         }
-        [customSchemeString appendFormat:@"?@", [paramPairs componentsJoinedByString:@"&"]];
+        [customSchemeString appendFormat:@"?%@", [paramPairs componentsJoinedByString:@"&"]];
     }
     
     NSString *urlString = customSchemeString;
@@ -170,19 +171,11 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
     }
 }
 
-// Push formatted bupa:// URL to window.handleOpenURL so OutSystems handles it natively
+// Post CDVPluginHandleOpenURLNotification so Cordova's native CDVHandleOpenURL automatically processes it
 - (void)storeAndDispatchURL:(NSURL *)webpageURL {
     if (webpageURL == nil) return;
-    NSString *urlString = webpageURL.absoluteString;
-    NSString *escapedUrl = [urlString stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
-
-    NSString *js = [NSString stringWithFormat:
-        @"if (typeof window.handleOpenURL === 'function') {"
-        @"  window.handleOpenURL('%@');"
-        @"}",
-        escapedUrl];
-
-    [self.commandDelegate evalJs:js];
+    os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Posting CDVPluginHandleOpenURLNotification for URL: %{public}@", webpageURL.absoluteString);
+    [[NSNotificationCenter defaultCenter] postNotificationName:kCDVHandleOpenURLNotification object:webpageURL];
 }
 
 // Pull from JS on cold start inside OutSystems OnApplicationReady
