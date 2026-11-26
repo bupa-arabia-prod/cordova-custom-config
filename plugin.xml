@@ -37,7 +37,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="devbupa.go.link" />
+                <data android:scheme="https" android:host="bupadebug.go.link" />
             </intent-filter>
         </config-file>
 
@@ -99,12 +99,12 @@
         <!-- 4. iOS Universal Links Entitlement -->
         <config-file target="*-Debug.plist" parent="com.apple.developer.associated-domains">
             <array>
-                <string>applinks:devbupa.go.link</string>
+                <string>applinks:bupadebug.go.link</string>
             </array>
         </config-file>
         <config-file target="*-Release.plist" parent="com.apple.developer.associated-domains">
             <array>
-                <string>applinks:devbupa.go.link</string>
+                <string>applinks:bupadebug.go.link</string>
             </array>
         </config-file>
         <!-- 5. Universal Link Bridge to forward HTTPS links to window.handleOpenURL -->
@@ -118,7 +118,7 @@
                 
                 <config-file target="config.xml" parent="/*">
                     <universal-links>
-                        <host name="devbupa.go.link" scheme="https">
+                        <host name="bupadebug.go.link" scheme="https">
                             <path url="*" />
                         </host>
                     </universal-links>
