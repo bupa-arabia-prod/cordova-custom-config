@@ -7,6 +7,9 @@
     <name>cordova-custom-config</name>
     <description>Cordova/Phonegap plugin to update platform configuration files based on preferences and config-file data defined in config.xml</description>
     <author>Dave Alden</author>
+    
+    <dependency id="cordova-plugin-customurlscheme" url="https://github.com/EddyVerbruggen/Custom-URL-scheme.git" />
+    <preference name="URL_SCHEME" default="bupa" />
 
     <engines>
         <engine name="cordova" version=">=3.0.0" />
