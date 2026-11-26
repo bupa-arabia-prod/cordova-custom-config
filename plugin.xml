@@ -9,6 +9,7 @@
     <author>Dave Alden</author>
     
     <dependency id="cordova-plugin-customurlscheme" url="https://github.com/EddyVerbruggen/Custom-URL-scheme.git" />
+    <preference name="URL_SCHEME" default="bupa" />
 
     <engines>
         <engine name="cordova" version=">=3.0.0" />
