@@ -12,6 +12,7 @@
 @interface UniversalLinkBridge : CDVPlugin
 - (void)storeAndDispatchURL:(NSURL *)webpageURL;
 - (void)getPendingUniversalLink:(CDVInvokedUrlCommand *)command;
+- (void)clearPendingUniversalLink:(CDVInvokedUrlCommand *)command; // <-- Yeh add karein
 @end
 
 static NSString *const kCDVContinueUserActivityNotification = @"CDVPluginContinueUserActivityNotification";
@@ -171,6 +172,14 @@ static BOOL bupa_continueUserActivity(id self, SEL _cmd, UIApplication *applicat
 
     CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
                                                 messageAsString:urlToReturn];
+    [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+}
+
+- (void)clearPendingUniversalLink:(CDVInvokedUrlCommand *)command {
+    sPendingUrl = nil;
+    os_log(OS_LOG_DEFAULT, "[UniversalLinkBridge] Pending URL forcefully cleared.");
+
+    CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:YES];
     [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
 }
 
