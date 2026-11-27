@@ -58,18 +58,6 @@ public class UniversalLinkBridge extends CordovaPlugin {
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         if ("getPendingUniversalLink".equals(action)) {
-            String link = pendingUniversalLink;
-            pendingUniversalLink = null; // Read hone ke baad clear kar dein taake duplicate na ho
-            PluginResult result = new PluginResult(PluginResult.Status.OK, link);
-            callbackContext.sendPluginResult(result);
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-    if ("getPendingUniversalLink".equals(action)) {
         String link = pendingUniversalLink;
         pendingUniversalLink = null; // Read hone ke baad clear kar dein
         PluginResult result = new PluginResult(PluginResult.Status.OK, link);
@@ -84,5 +72,4 @@ public boolean execute(String action, JSONArray args, CallbackContext callbackCo
         return true;
     }
     return false;
-}
 }
