@@ -66,4 +66,23 @@ public class UniversalLinkBridge extends CordovaPlugin {
         }
         return false;
     }
+
+    @Override
+public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+    if ("getPendingUniversalLink".equals(action)) {
+        String link = pendingUniversalLink;
+        pendingUniversalLink = null; // Read hone ke baad clear kar dein
+        PluginResult result = new PluginResult(PluginResult.Status.OK, link);
+        callbackContext.sendPluginResult(result);
+        return true;
+    } 
+    // 👇 Yeh naya action add karein jo force-clear kar de
+    else if ("clearPendingUniversalLink".equals(action)) {
+        pendingUniversalLink = null;
+        PluginResult result = new PluginResult(PluginResult.Status.OK, true);
+        callbackContext.sendPluginResult(result);
+        return true;
+    }
+    return false;
+}
 }
