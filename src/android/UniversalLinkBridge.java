@@ -73,3 +73,4 @@ public class UniversalLinkBridge extends CordovaPlugin {
     }
     return false;
 }
+}
