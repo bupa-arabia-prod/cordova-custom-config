@@ -53,6 +53,17 @@
                 <data android:scheme="bupa" />
             </intent-filter>
         </config-file>
+        
+            <config-file target="res/xml/config.xml" parent="/*">
+                <feature name="UniversalLinkBridge">
+                    <param name="android-package" value="sa.com.bupa.deeplink.UniversalLinkBridge"/>
+                    <param name="onload" value="true"/>
+                </feature>
+            </config-file>
+
+            <source-file src="src/android/UniversalLinkBridge.java" target-dir="app/src/main/java/sa/com/bupa/deeplink" />
+        
+        
     </platform>
 
     <platform name="ios">
